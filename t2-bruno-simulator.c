@@ -170,12 +170,18 @@ void simulate(const char *input_file, const char *output_file) {
         if (currentProcess) {
             currentProcess->remaining_time--;
             if (currentProcess->remaining_time == 0) {
-                if (currentProcess->current_cycle < currentProcess->num_cycles - 1) {
-                    currentProcess->current_cycle++;
-                    currentProcess->state = 3; // Bloqueado
-                    enqueue(deviceQueues[currentProcess->devices[currentProcess->current_cycle] - 1], currentProcess);
+                currentProcess->tCpu[currentProcess->current_cycle] -= TIME_QUANTUM;
+                if (currentProcess->tCpu[currentProcess->current_cycle] <= 0) {
+                    if (currentProcess->current_cycle < currentProcess->num_cycles - 1) {
+                        currentProcess->current_cycle++;
+                        currentProcess->state = 3; // Bloqueado
+                        enqueue(deviceQueues[currentProcess->devices[currentProcess->current_cycle] - 1], currentProcess);
+                    } else {
+                        currentProcess->state = 4; // Terminado
+                    }
                 } else {
-                    currentProcess->state = 4; // Terminado
+                    currentProcess->state = 1; // Retorna para Ready
+                    enqueue(readyQueue, currentProcess);
                 }
                 currentProcess = NULL;
             }
@@ -184,8 +190,9 @@ void simulate(const char *input_file, const char *output_file) {
         if (!currentProcess && !isEmpty(readyQueue)) {
             currentProcess = dequeue(readyQueue);
             currentProcess->state = 2; // Running
-            int time_left_in_cycle = currentProcess->tCpu[currentProcess->current_cycle] - (currentProcess->tCpu[currentProcess->current_cycle] - currentProcess->remaining_time);
-            currentProcess->remaining_time = (time_left_in_cycle < TIME_QUANTUM) ? time_left_in_cycle : TIME_QUANTUM;
+            currentProcess->remaining_time = (currentProcess->tCpu[currentProcess->current_cycle] < TIME_QUANTUM)
+                                                ? currentProcess->tCpu[currentProcess->current_cycle]
+                                                : TIME_QUANTUM;
         } else if (!currentProcess) {
             cpu_idle_time++;
         }
