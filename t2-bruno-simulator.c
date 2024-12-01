@@ -6,7 +6,6 @@
 #define MAX_DEVICES 10
 #define TIME_QUANTUM 4
 
-// Estrutura PCB (Process Control Block)
 typedef struct {
     int id;
     int tInicio;
@@ -14,14 +13,14 @@ typedef struct {
     int *devices;
     int num_cycles;
     int current_cycle;
-    int state; // 0: new/ready, 1: ready, 2: running, 3: blocked, 4: terminated
+    int state; 
     int remaining_time;
     int waiting_time;
     int throughput_time;
     int device_time[MAX_DEVICES];
 } PCB;
 
-// Estrutura da Fila
+
 typedef struct Node {
     PCB *process;
     struct Node *next;
@@ -32,7 +31,7 @@ typedef struct {
     Node *rear;
 } Queue;
 
-// Funções da fila
+
 Queue *createQueue() {
     Queue *q = (Queue *)malloc(sizeof(Queue));
     q->front = q->rear = NULL;
@@ -62,7 +61,7 @@ PCB *dequeue(Queue *q) {
     return process;
 }
 
-// Funções auxiliares
+
 void parseInputFile(const char *filename, PCB *processes[], int *nProc, int *nDisp, int tDisp[]) {
     FILE *file = fopen(filename, "r");
     if (!file) {
@@ -101,7 +100,7 @@ void parseInputFile(const char *filename, PCB *processes[], int *nProc, int *nDi
             processes[i]->num_cycles++;
         }
 
-        processes[i]->state = 0; // New/ready
+        processes[i]->state = 0; 
         processes[i]->current_cycle = 0;
         processes[i]->remaining_time = processes[i]->tCpu[0];
         processes[i]->waiting_time = 0;
@@ -131,7 +130,7 @@ void printSimulationState(int time, PCB *processes[], int nProc, FILE *output) {
     fprintf(output, " |\n");
 }
 
-// Simulador
+
 void simulate(const char *input_file, const char *output_file) {
     PCB *processes[MAX_PROCESSES];
     int nProc, nDisp, tDisp[MAX_DEVICES];
@@ -158,52 +157,53 @@ void simulate(const char *input_file, const char *output_file) {
     while (1) {
         int all_terminated = 1;
 
-        // Checagem de novos processos
+    
         for (i = 0; i < nProc; i++) {
             if (processes[i]->tInicio == time && processes[i]->state == 0) {
-                processes[i]->state = 1; // Ready
+                processes[i]->state = 1; 
                 enqueue(readyQueue, processes[i]);
             }
         }
 
-        // Gerenciamento da CPU
+
         if (currentProcess) {
             currentProcess->remaining_time--;
-
-            // Se o tempo da CPU acabou ou a fatia de tempo foi alcançada
-            if (currentProcess->remaining_time == 0 || currentProcess->remaining_time <= TIME_QUANTUM) {
-                if (currentProcess->current_cycle < currentProcess->num_cycles - 1) {
-                    currentProcess->current_cycle++;
-                    currentProcess->state = 3; // Bloqueado
-                    enqueue(deviceQueues[currentProcess->devices[currentProcess->current_cycle] - 1], currentProcess);
+            if (currentProcess->remaining_time == 0) {
+                currentProcess->tCpu[currentProcess->current_cycle] -= TIME_QUANTUM;
+                if (currentProcess->tCpu[currentProcess->current_cycle] <= 0) {
+                    if (currentProcess->current_cycle < currentProcess->num_cycles - 1) {
+                        currentProcess->current_cycle++;
+                        currentProcess->state = 3;
+                        enqueue(deviceQueues[currentProcess->devices[currentProcess->current_cycle] - 1], currentProcess);
+                    } else {
+                        currentProcess->state = 4;
+                    }
                 } else {
-                    currentProcess->state = 4; // Terminado
+                    currentProcess->state = 1; 
+                    enqueue(readyQueue, currentProcess);
                 }
                 currentProcess = NULL;
             }
         }
 
-        // Se não há processo em execução, pegar o próximo da fila ready
         if (!currentProcess && !isEmpty(readyQueue)) {
             currentProcess = dequeue(readyQueue);
-            currentProcess->state = 2; // Running
-            currentProcess->remaining_time = (currentProcess->tCpu[currentProcess->current_cycle] < TIME_QUANTUM) 
+            currentProcess->state = 2; 
+            currentProcess->remaining_time = (currentProcess->tCpu[currentProcess->current_cycle] < TIME_QUANTUM)
                                                 ? currentProcess->tCpu[currentProcess->current_cycle]
                                                 : TIME_QUANTUM;
         } else if (!currentProcess) {
             cpu_idle_time++;
         }
 
-        // Gerenciamento de dispositivos
         for (i = 0; i < nDisp; i++) {
             if (!isEmpty(deviceQueues[i])) {
                 PCB *process = dequeue(deviceQueues[i]);
-                process->state = 1; // Ready
+                process->state = 1;
                 enqueue(readyQueue, process);
             }
         }
 
-        // Verificação de término
         all_terminated = 1;
         for (i = 0; i < nProc; i++) {
             if (processes[i]->state != 4) {
@@ -212,13 +212,11 @@ void simulate(const char *input_file, const char *output_file) {
             }
         }
 
-        // Saída do estado atual
         printSimulationState(time, processes, nProc, output);
 
         if (all_terminated) break;
         time++;
 
-        // Segurança para evitar loops infinitos
         if (time > 10000) {
             fprintf(output, "Erro: Loop infinito detectado. Verifique os dados de entrada.\n");
             break;
