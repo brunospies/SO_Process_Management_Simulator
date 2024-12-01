@@ -92,7 +92,7 @@ void parseInputFile(const char *filename, PCB *processes[], int *nProc, int *nDi
             processes[i]->tCpu[processes[i]->num_cycles] = tCpu;
 
             if (fscanf(file, "%d", &device) != 1) {
-                processes[i]->devices[processes[i]->num_cycles] = -1;
+                processes[i]->devices[processes[i]->num_cycles] = -1; // End of cycles for this process
                 processes[i]->num_cycles++;
                 break;
             }
@@ -161,7 +161,7 @@ void simulate(const char *input_file, const char *output_file) {
         // Checagem de novos processos
         for (i = 0; i < nProc; i++) {
             if (processes[i]->tInicio == time && processes[i]->state == 0) {
-                processes[i]->state = 1;
+                processes[i]->state = 1; // Ready
                 enqueue(readyQueue, processes[i]);
             }
         }
@@ -169,11 +169,13 @@ void simulate(const char *input_file, const char *output_file) {
         // Gerenciamento da CPU
         if (currentProcess) {
             currentProcess->remaining_time--;
-            if (currentProcess->remaining_time == 0) {
+            // Se o tempo da CPU acabou ou a fatia de tempo foi alcançada
+            if (currentProcess->remaining_time == 0 || currentProcess->remaining_time <= TIME_QUANTUM) {
+                // Se ainda houver ciclos de CPU restantes, coloque o processo na fila ready
                 if (currentProcess->current_cycle < currentProcess->num_cycles - 1) {
                     currentProcess->current_cycle++;
-                    currentProcess->state = 3; // Bloqueado
-                    enqueue(deviceQueues[currentProcess->devices[currentProcess->current_cycle] - 1], currentProcess);
+                    currentProcess->state = 1; // Ready
+                    enqueue(readyQueue, currentProcess); // Enviar de volta à fila ready
                 } else {
                     currentProcess->state = 4; // Terminado
                 }
@@ -181,26 +183,25 @@ void simulate(const char *input_file, const char *output_file) {
             }
         }
 
+        // Se não há processo em execução, pegar o próximo da fila ready
         if (!currentProcess && !isEmpty(readyQueue)) {
             currentProcess = dequeue(readyQueue);
-            currentProcess->state = 2; // Em execução
-            currentProcess->remaining_time = TIME_QUANTUM < currentProcess->tCpu[currentProcess->current_cycle] ?
-                                             TIME_QUANTUM : currentProcess->tCpu[currentProcess->current_cycle];
+            currentProcess->state = 2; // Running
+            currentProcess->remaining_time = (currentProcess->tCpu[currentProcess->current_cycle] < TIME_QUANTUM) 
+                                                ? currentProcess->tCpu[currentProcess->current_cycle]
+                                                : TIME_QUANTUM;
         } else if (!currentProcess) {
             cpu_idle_time++;
         }
 
-        // Processos de dispositivos
+        // Gerenciamento de dispositivos
         for (i = 0; i < nDisp; i++) {
             if (!isEmpty(deviceQueues[i])) {
                 PCB *process = dequeue(deviceQueues[i]);
-                process->state = 1;
+                process->state = 1; // Ready
                 enqueue(readyQueue, process);
             }
         }
-
-        // Impressão do estado da simulação
-        printSimulationState(time, processes, nProc, output);
 
         // Verificação de término
         all_terminated = 1;
@@ -211,17 +212,19 @@ void simulate(const char *input_file, const char *output_file) {
             }
         }
 
+        // Saída do estado atual
+        printSimulationState(time, processes, nProc, output);
+
         if (all_terminated) break;
         time++;
 
         // Segurança para evitar loops infinitos
-        if (time > 1000) {
+        if (time > 10000) {
             fprintf(output, "Erro: Loop infinito detectado. Verifique os dados de entrada.\n");
             break;
         }
     }
 
-    // Estatísticas finais
     fprintf(output, "| CPU idle time: %d |\n", cpu_idle_time);
     fclose(output);
 }
