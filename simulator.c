@@ -32,6 +32,7 @@ int main(){
     fclose(arq);
 
 
+
     // Escrita
 
     strcpy(Texto, "Escrevendo no arquivo\nHello World!");

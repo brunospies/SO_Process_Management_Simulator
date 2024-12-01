@@ -64,6 +64,7 @@ PCB *dequeue(Queue *q) {
 
 // Funções auxiliares
 void parseInputFile(const char *filename, PCB *processes[], int *nProc, int *nDisp, int tDisp[]) {
+    int i;
     FILE *file = fopen(filename, "r");
     if (!file) {
         perror("Erro ao abrir o arquivo");
@@ -71,11 +72,11 @@ void parseInputFile(const char *filename, PCB *processes[], int *nProc, int *nDi
     }
 
     fscanf(file, "%d %d", nProc, nDisp);
-    for (int i = 0; i < *nDisp; i++) {
+    for (i = 0; i < *nDisp; i++) {
         fscanf(file, "%d", &tDisp[i]);
     }
 
-    for (int i = 0; i < *nProc; i++) {
+    for (i = 0; i < *nProc; i++) {
         processes[i] = (PCB *)malloc(sizeof(PCB));
         processes[i]->id = i + 1;
         fscanf(file, "%d", &processes[i]->tInicio);
@@ -111,8 +112,9 @@ void parseInputFile(const char *filename, PCB *processes[], int *nProc, int *nDi
 }
 
 void printSimulationState(int time, PCB *processes[], int nProc, FILE *output) {
+    int i;
     fprintf(output, "<%02d>", time);
-    for (int i = 0; i < nProc; i++) {
+    for (i = 0; i < nProc; i++) {
         char *state;
         switch (processes[i]->state) {
             case 0: state = "new/ready"; break;
@@ -130,7 +132,7 @@ void printSimulationState(int time, PCB *processes[], int nProc, FILE *output) {
 // Simulador
 void simulate(const char *input_file, const char *output_file) {
     PCB *processes[MAX_PROCESSES];
-    int nProc, nDisp, tDisp[MAX_DEVICES];
+    int nProc, nDisp, tDisp[MAX_DEVICES], i;
     parseInputFile(input_file, processes, &nProc, &nDisp, tDisp);
 
     FILE *output = fopen(output_file, "w");
@@ -141,7 +143,7 @@ void simulate(const char *input_file, const char *output_file) {
 
     Queue *readyQueue = createQueue();
     Queue *deviceQueues[MAX_DEVICES];
-    for (int i = 0; i < nDisp; i++) {
+    for (i = 0; i < nDisp; i++) {
         deviceQueues[i] = createQueue();
     }
 
@@ -153,7 +155,7 @@ void simulate(const char *input_file, const char *output_file) {
         int all_terminated = 1;
 
         // Checagem de novos processos
-        for (int i = 0; i < nProc; i++) {
+        for (i = 0; i < nProc; i++) {
             if (processes[i]->tInicio == time && processes[i]->state == 0) {
                 processes[i]->state = 1;
                 enqueue(readyQueue, processes[i]);
@@ -185,7 +187,7 @@ void simulate(const char *input_file, const char *output_file) {
         }
 
         // Processos de dispositivos
-        for (int i = 0; i < nDisp; i++) {
+        for (i = 0; i < nDisp; i++) {
             if (!isEmpty(deviceQueues[i])) {
                 PCB *process = dequeue(deviceQueues[i]);
                 process->state = 1;
@@ -197,7 +199,7 @@ void simulate(const char *input_file, const char *output_file) {
         printSimulationState(time, processes, nProc, output);
 
         // Verificação de término
-        for (int i = 0; i < nProc; i++) {
+        for (i = 0; i < nProc; i++) {
             if (processes[i]->state != 4) {
                 all_terminated = 0;
                 break;
