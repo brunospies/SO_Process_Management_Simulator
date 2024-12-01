@@ -64,7 +64,6 @@ PCB *dequeue(Queue *q) {
 
 // Funções auxiliares
 void parseInputFile(const char *filename, PCB *processes[], int *nProc, int *nDisp, int tDisp[]) {
-    int i;
     FILE *file = fopen(filename, "r");
     if (!file) {
         perror("Erro ao abrir o arquivo");
@@ -72,6 +71,8 @@ void parseInputFile(const char *filename, PCB *processes[], int *nProc, int *nDi
     }
 
     fscanf(file, "%d %d", nProc, nDisp);
+
+    int i;
     for (i = 0; i < *nDisp; i++) {
         fscanf(file, "%d", &tDisp[i]);
     }
@@ -112,8 +113,9 @@ void parseInputFile(const char *filename, PCB *processes[], int *nProc, int *nDi
 }
 
 void printSimulationState(int time, PCB *processes[], int nProc, FILE *output) {
-    int i;
     fprintf(output, "<%02d>", time);
+
+    int i;
     for (i = 0; i < nProc; i++) {
         char *state;
         switch (processes[i]->state) {
@@ -132,7 +134,7 @@ void printSimulationState(int time, PCB *processes[], int nProc, FILE *output) {
 // Simulador
 void simulate(const char *input_file, const char *output_file) {
     PCB *processes[MAX_PROCESSES];
-    int nProc, nDisp, tDisp[MAX_DEVICES], i;
+    int nProc, nDisp, tDisp[MAX_DEVICES];
     parseInputFile(input_file, processes, &nProc, &nDisp, tDisp);
 
     FILE *output = fopen(output_file, "w");
@@ -143,6 +145,8 @@ void simulate(const char *input_file, const char *output_file) {
 
     Queue *readyQueue = createQueue();
     Queue *deviceQueues[MAX_DEVICES];
+
+    int i;
     for (i = 0; i < nDisp; i++) {
         deviceQueues[i] = createQueue();
     }
@@ -157,7 +161,7 @@ void simulate(const char *input_file, const char *output_file) {
         // Checagem de novos processos
         for (i = 0; i < nProc; i++) {
             if (processes[i]->tInicio == time && processes[i]->state == 0) {
-                processes[i]->state = 1;
+                processes[i]->state = 1; // Ready
                 enqueue(readyQueue, processes[i]);
             }
         }
@@ -179,26 +183,24 @@ void simulate(const char *input_file, const char *output_file) {
 
         if (!currentProcess && !isEmpty(readyQueue)) {
             currentProcess = dequeue(readyQueue);
-            currentProcess->state = 2; // Em execução
-            currentProcess->remaining_time = TIME_QUANTUM < currentProcess->tCpu[currentProcess->current_cycle] ?
-                                             TIME_QUANTUM : currentProcess->tCpu[currentProcess->current_cycle];
+            currentProcess->state = 2; // Running
+            int time_left_in_cycle = currentProcess->tCpu[currentProcess->current_cycle] - (currentProcess->tCpu[currentProcess->current_cycle] - currentProcess->remaining_time);
+            currentProcess->remaining_time = (time_left_in_cycle < TIME_QUANTUM) ? time_left_in_cycle : TIME_QUANTUM;
         } else if (!currentProcess) {
             cpu_idle_time++;
         }
 
-        // Processos de dispositivos
+        // Gerenciamento de dispositivos
         for (i = 0; i < nDisp; i++) {
             if (!isEmpty(deviceQueues[i])) {
                 PCB *process = dequeue(deviceQueues[i]);
-                process->state = 1;
+                process->state = 1; // Ready
                 enqueue(readyQueue, process);
             }
         }
 
-        // Impressão do estado da simulação
-        printSimulationState(time, processes, nProc, output);
-
         // Verificação de término
+        all_terminated = 1;
         for (i = 0; i < nProc; i++) {
             if (processes[i]->state != 4) {
                 all_terminated = 0;
@@ -206,11 +208,19 @@ void simulate(const char *input_file, const char *output_file) {
             }
         }
 
+        // Saída do estado atual
+        printSimulationState(time, processes, nProc, output);
+
         if (all_terminated) break;
         time++;
+
+        // Segurança para evitar loops infinitos
+        if (time > 10000) {
+            fprintf(output, "Erro: Loop infinito detectado. Verifique os dados de entrada.\n");
+            break;
+        }
     }
 
-    // Estatísticas finais
     fprintf(output, "| CPU idle time: %d |\n", cpu_idle_time);
     fclose(output);
 }
