@@ -82,6 +82,7 @@ void parseInputFile(const char *filename, PCB *processes[], int *nProc, int *nDi
         processes[i]->id = i + 1;
         fscanf(file, "%d", &processes[i]->tInicio);
 
+        // Aloca memória para os vetores de CPU e dispositivos, com um número máximo de ciclos
         processes[i]->tCpu = (int *)malloc(MAX_PROCESSES * sizeof(int));
         processes[i]->devices = (int *)malloc(MAX_PROCESSES * sizeof(int));
         processes[i]->num_cycles = 0;
