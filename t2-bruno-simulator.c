@@ -169,28 +169,25 @@ void simulate(const char *input_file, const char *output_file) {
         // Gerenciamento da CPU
         if (currentProcess) {
             currentProcess->remaining_time--;
-            if (currentProcess->remaining_time == 0) {
-                currentProcess->tCpu[currentProcess->current_cycle] -= TIME_QUANTUM;
-                if (currentProcess->tCpu[currentProcess->current_cycle] <= 0) {
-                    if (currentProcess->current_cycle < currentProcess->num_cycles - 1) {
-                        currentProcess->current_cycle++;
-                        currentProcess->state = 3; // Bloqueado
-                        enqueue(deviceQueues[currentProcess->devices[currentProcess->current_cycle] - 1], currentProcess);
-                    } else {
-                        currentProcess->state = 4; // Terminado
-                    }
+
+            // Se o tempo da CPU acabou ou a fatia de tempo foi alcançada
+            if (currentProcess->remaining_time == 0 || currentProcess->remaining_time <= TIME_QUANTUM) {
+                if (currentProcess->current_cycle < currentProcess->num_cycles - 1) {
+                    currentProcess->current_cycle++;
+                    currentProcess->state = 3; // Bloqueado
+                    enqueue(deviceQueues[currentProcess->devices[currentProcess->current_cycle] - 1], currentProcess);
                 } else {
-                    currentProcess->state = 1; // Retorna para Ready
-                    enqueue(readyQueue, currentProcess);
+                    currentProcess->state = 4; // Terminado
                 }
                 currentProcess = NULL;
             }
         }
 
+        // Se não há processo em execução, pegar o próximo da fila ready
         if (!currentProcess && !isEmpty(readyQueue)) {
             currentProcess = dequeue(readyQueue);
             currentProcess->state = 2; // Running
-            currentProcess->remaining_time = (currentProcess->tCpu[currentProcess->current_cycle] < TIME_QUANTUM)
+            currentProcess->remaining_time = (currentProcess->tCpu[currentProcess->current_cycle] < TIME_QUANTUM) 
                                                 ? currentProcess->tCpu[currentProcess->current_cycle]
                                                 : TIME_QUANTUM;
         } else if (!currentProcess) {
