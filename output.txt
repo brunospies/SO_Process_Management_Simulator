@@ -3,24 +3,81 @@
 <02> | P01 state: running           | P02 state: new/ready         | P03 state: new/ready         | P04 state: --                | P05 state: --                |
 <03> | P01 state: running           | P02 state: new/ready         | P03 state: new/ready         | P04 state: new/ready         | P05 state: --                |
 <04> | P01 state: running           | P02 state: new/ready         | P03 state: new/ready         | P04 state: new/ready         | P05 state: new/ready         |
-<05> | P01 state: ready             | P02 state: new/ready         | P03 state: new/ready         | P04 state: new/ready         | P05 state: new/ready         |
+<05> | P01 state: ready             | P02 state: running           | P03 state: new/ready         | P04 state: new/ready         | P05 state: new/ready         |
 <06> | P01 state: ready             | P02 state: running           | P03 state: new/ready         | P04 state: new/ready         | P05 state: new/ready         |
 <07> | P01 state: ready             | P02 state: running           | P03 state: new/ready         | P04 state: new/ready         | P05 state: new/ready         |
 <08> | P01 state: ready             | P02 state: running           | P03 state: new/ready         | P04 state: new/ready         | P05 state: new/ready         |
-<09> | P01 state: ready             | P02 state: running           | P03 state: new/ready         | P04 state: new/ready         | P05 state: new/ready         |
-<10> | P01 state: ready             | P02 state: ready             | P03 state: new/ready         | P04 state: new/ready         | P05 state: new/ready         |
+<09> | P01 state: ready             | P02 state: ready             | P03 state: running           | P04 state: new/ready         | P05 state: new/ready         |
+<10> | P01 state: ready             | P02 state: ready             | P03 state: running           | P04 state: new/ready         | P05 state: new/ready         |
 <11> | P01 state: ready             | P02 state: ready             | P03 state: running           | P04 state: new/ready         | P05 state: new/ready         |
 <12> | P01 state: ready             | P02 state: ready             | P03 state: running           | P04 state: new/ready         | P05 state: new/ready         |
-<13> | P01 state: ready             | P02 state: ready             | P03 state: running           | P04 state: new/ready         | P05 state: new/ready         |
-<14> | P01 state: ready             | P02 state: ready             | P03 state: running           | P04 state: new/ready         | P05 state: new/ready         |
-<15> | P01 state: ready             | P02 state: ready             | P03 state: ready             | P04 state: new/ready         | P05 state: new/ready         |
-<16> | P01 state: ready             | P02 state: ready             | P03 state: ready             | P04 state: running           | P05 state: new/ready         |
-<17> | P01 state: ready             | P02 state: ready             | P03 state: ready             | P04 state: running           | P05 state: new/ready         |
-<18> | P01 state: ready             | P02 state: ready             | P03 state: ready             | P04 state: running           | P05 state: new/ready         |
-<19> | P01 state: ready             | P02 state: ready             | P03 state: ready             | P04 state: running           | P05 state: new/ready         |
-<20> | P01 state: ready             | P02 state: ready             | P03 state: ready             | P04 state: blocked d0        | P05 state: running           |
-<21> | P01 state: ready             | P02 state: ready             | P03 state: ready             | P04 state: blocked d0        | P05 state: running           |
-<22> | P01 state: ready             | P02 state: ready             | P03 state: ready             | P04 state: blocked d0        | P05 state: running           |
-<23> | P01 state: running           | P02 state: ready             | P03 state: ready             | P04 state: blocked d0        | P05 state: blocked d0        |
-<24> | P01 state: bloqued queue d1  | P02 state: ready             | P03 state: ready             | P04 state: ready             | P05 state: blocked d0        |
-<25> | P01 state: bloqued queue d1  | P02 stat
+<13> | P01 state: ready             | P02 state: ready             | P03 state: ready             | P04 state: running           | P05 state: new/ready         |
+<14> | P01 state: ready             | P02 state: ready             | P03 state: ready             | P04 state: running           | P05 state: new/ready         |
+<15> | P01 state: ready             | P02 state: ready             | P03 state: ready             | P04 state: running           | P05 state: new/ready         |
+<16> | P01 state: ready             | P02 state: ready             | P03 state: ready             | P04 state: blocked d1        | P05 state: running           |
+<17> | P01 state: ready             | P02 state: ready             | P03 state: ready             | P04 state: blocked d1        | P05 state: running           |
+<18> | P01 state: ready             | P02 state: ready             | P03 state: ready             | P04 state: blocked d1        | P05 state: running           |
+<19> | P01 state: ready             | P02 state: ready             | P03 state: ready             | P04 state: blocked d1        | P05 state: running           |
+<20> | P01 state: running           | P02 state: ready             | P03 state: ready             | P04 state: blocked d1        | P05 state: ready             |
+<21> | P01 state: running           | P02 state: ready             | P03 state: ready             | P04 state: ready             | P05 state: ready             |
+<22> | P01 state: blocked d1        | P02 state: running           | P03 state: ready             | P04 state: ready             | P05 state: ready             |
+<23> | P01 state: blocked d1        | P02 state: blocked d2        | P03 state: running           | P04 state: ready             | P05 state: ready             |
+<24> | P01 state: blocked d1        | P02 state: blocked d2        | P03 state: blocked d3        | P04 state: ready             | P05 state: running           |
+<25> | P01 state: blocked d1        | P02 state: blocked d2        | P03 state: blocked d3        | P04 state: ready             | P05 state: running           |
+<26> | P01 state: blocked d1        | P02 state: blocked d2        | P03 state: blocked d3        | P04 state: ready             | P05 state: running           |
+<27> | P01 state: ready             | P02 state: blocked d2        | P03 state: blocked d3        | P04 state: running           | P05 state: bloqued queue d2  |
+<28> | P01 state: ready             | P02 state: blocked d2        | P03 state: ready             | P04 state: running           | P05 state: bloqued queue d2  |
+<29> | P01 state: ready             | P02 state: ready             | P03 state: ready             | P04 state: running           | P05 state: blocked d2        |
+<30> | P01 state: ready             | P02 state: ready             | P03 state: ready             | P04 state: running           | P05 state: blocked d2        |
+<31> | P01 state: running           | P02 state: ready             | P03 state: ready             | P04 state: ready             | P05 state: blocked d2        |
+<32> | P01 state: running           | P02 state: ready             | P03 state: ready             | P04 state: ready             | P05 state: blocked d2        |
+<33> | P01 state: bloqued queue d2  | P02 state: ready             | P03 state: running           | P04 state: ready             | P05 state: blocked d2        |
+<34> | P01 state: bloqued queue d2  | P02 state: ready             | P03 state: running           | P04 state: ready             | P05 state: blocked d2        |
+<35> | P01 state: blocked d2        | P02 state: running           | P03 state: blocked d1        | P04 state: ready             | P05 state: ready             |
+<36> | P01 state: blocked d2        | P02 state: running           | P03 state: blocked d1        | P04 state: ready             | P05 state: ready             |
+<37> | P01 state: blocked d2        | P02 state: running           | P03 state: blocked d1        | P04 state: ready             | P05 state: ready             |
+<38> | P01 state: blocked d2        | P02 state: bloqued queue d1  | P03 state: blocked d1        | P04 state: running           | P05 state: ready             |
+<39> | P01 state: blocked d2        | P02 state: bloqued queue d1  | P03 state: blocked d1        | P04 state: bloqued queue d2  | P05 state: running           |
+<40> | P01 state: blocked d2        | P02 state: blocked d1        | P03 state: ready             | P04 state: bloqued queue d2  | P05 state: running           |
+<41> | P01 state: ready             | P02 state: blocked d1        | P03 state: ready             | P04 state: blocked d2        | P05 state: running           |
+<42> | P01 state: ready             | P02 state: blocked d1        | P03 state: ready             | P04 state: blocked d2        | P05 state: running           |
+<43> | P01 state: ready             | P02 state: blocked d1        | P03 state: running           | P04 state: blocked d2        | P05 state: ready             |
+<44> | P01 state: ready             | P02 state: blocked d1        | P03 state: running           | P04 state: blocked d2        | P05 state: ready             |
+<45> | P01 state: ready             | P02 state: ready             | P03 state: running           | P04 state: blocked d2        | P05 state: ready             |
+<46> | P01 state: ready             | P02 state: ready             | P03 state: running           | P04 state: blocked d2        | P05 state: ready             |
+<47> | P01 state: running           | P02 state: ready             | P03 state: ready             | P04 state: ready             | P05 state: ready             |
+<48> | P01 state: running           | P02 state: ready             | P03 state: ready             | P04 state: ready             | P05 state: ready             |
+<49> | P01 state: running           | P02 state: ready             | P03 state: ready             | P04 state: ready             | P05 state: ready             |
+<50> | P01 state: blocked d1        | P02 state: ready             | P03 state: ready             | P04 state: ready             | P05 state: running           |
+<51> | P01 state: blocked d1        | P02 state: running           | P03 state: ready             | P04 state: ready             | P05 state: bloqued queue d1  |
+<52> | P01 state: blocked d1        | P02 state: running           | P03 state: ready             | P04 state: ready             | P05 state: bloqued queue d1  |
+<53> | P01 state: blocked d1        | P02 state: blocked d2        | P03 state: running           | P04 state: ready             | P05 state: bloqued queue d1  |
+<54> | P01 state: blocked d1        | P02 state: blocked d2        | P03 state: blocked d3        | P04 state: running           | P05 state: bloqued queue d1  |
+<55> | P01 state: ready             | P02 state: blocked d2        | P03 state: blocked d3        | P04 state: running           | P05 state: blocked d1        |
+<56> | P01 state: running           | P02 state: blocked d2        | P03 state: blocked d3        | P04 state: bloqued queue d3  | P05 state: blocked d1        |
+<57> | P01 state: running           | P02 state: blocked d2        | P03 state: blocked d3        | P04 state: bloqued queue d3  | P05 state: blocked d1        |
+<58> | P01 state: running           | P02 state: blocked d2        | P03 state: ready             | P04 state: blocked d3        | P05 state: blocked d1        |
+<59> | P01 state: running           | P02 state: ready             | P03 state: ready             | P04 state: blocked d3        | P05 state: blocked d1        |
+<60> | P01 state: terminated        | P02 state: ready             | P03 state: running           | P04 state: blocked d3        | P05 state: ready             |
+<61> | P01 state: terminated        | P02 state: ready             | P03 state: running           | P04 state: blocked d3        | P05 state: ready             |
+<62> | P01 state: terminated        | P02 state: running           | P03 state: terminated        | P04 state: ready             | P05 state: ready             |
+<63> | P01 state: terminated        | P02 state: running           | P03 state: terminated        | P04 state: ready             | P05 state: ready             |
+<64> | P01 state: terminated        | P02 state: running           | P03 state: terminated        | P04 state: ready             | P05 state: ready             |
+<65> | P01 state: terminated        | P02 state: running           | P03 state: terminated        | P04 state: ready             | P05 state: ready             |
+<66> | P01 state: terminated        | P02 state: terminated        | P03 state: terminated        | P04 state: ready             | P05 state: running           |
+<67> | P01 state: terminated        | P02 state: terminated        | P03 state: terminated        | P04 state: ready             | P05 state: running           |
+<68> | P01 state: terminated        | P02 state: terminated        | P03 state: terminated        | P04 state: ready             | P05 state: running           |
+<69> | P01 state: terminated        | P02 state: terminated        | P03 state: terminated        | P04 state: running           | P05 state: blocked d2        |
+<70> | P01 state: terminated        | P02 state: terminated        | P03 state: terminated        | P04 state: running           | P05 state: blocked d2        |
+<71> | P01 state: terminated        | P02 state: terminated        | P03 state: terminated        | P04 state: running           | P05 state: blocked d2        |
+<72> | P01 state: terminated        | P02 state: terminated        | P03 state: terminated        | P04 state: terminated        | P05 state: blocked d2        |
+<73> | P01 state: terminated        | P02 state: terminated        | P03 state: terminated        | P04 state: terminated        | P05 state: blocked d2        |
+<74> | P01 state: terminated        | P02 state: terminated        | P03 state: terminated        | P04 state: terminated        | P05 state: blocked d2        |
+<75> | P01 state: terminated        | P02 state: terminated        | P03 state: terminated        | P04 state: terminated        | P05 state: running           |
+<76> | P01 state: terminated        | P02 state: terminated        | P03 state: terminated        | P04 state: terminated        | P05 state: terminated        |
+| P01 device time d1: 10, device time d2: 6, device time d3: 0, waiting time: 2, troughput: 56
+| P02 device time d1: 5, device time d2: 12, device time d3: 0, waiting time: 2, troughput: 61
+| P03 device time d1: 5, device time d2: 0, device time d3: 8, waiting time: 0, troughput: 59
+| P04 device time d1: 5, device time d2: 6, device time d3: 4, waiting time: 4, troughput: 62
+| P05 device time d1: 5, device time d2: 12, device time d3: 0, waiting time: 6, troughput: 63
+| CPU idle time: 4 |
