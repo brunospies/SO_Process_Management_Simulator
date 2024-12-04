@@ -11,14 +11,15 @@
 typedef struct {
     int id;
     int tInicio;
+    int nDisp;
     int *tCpu;
     int *devices;
     int num_cycles;
-    int current_cycle;
     int state; 
     int remaining_time;
     int waiting_time;
     int throughput_time;
+    int device_wait;
     int device_time[MAX_DEVICES];
 } PCB;
 
@@ -116,28 +117,37 @@ void parseInputFile(const char *filename, PCB *processes[], int *nProc, int *nDi
         }
         processes[i-1]->id = i;
         processes[i-1]->tInicio = input_data[i][0];
+        processes[i-1]->tCpu = (int *)malloc(cols[i] / 2 * sizeof(int));
+        processes[i-1]->devices = (int *)malloc((cols[i] / 2 - 1) * sizeof(int));
         devices = processes[i-1]->devices;
         tCpu = processes[i-1]->tCpu;
         processes[i-1]->state = -1;
         processes[i-1]->num_cycles = 0;
-        processes[i-1]->current_cycle = 0;
         processes[i-1]->waiting_time = 0;
         processes[i-1]->throughput_time = 0;
+        processes[i-1]->nDisp=0;
+        processes[i-1]->device_wait=0;
+        processes[i-1]->remaining_time = TIME_QUANTUM;
+
+        for (j=0;j<MAX_DEVICES;j++) processes[i-1]->device_time[j] = 0;
 
         for (j = 1; j < cols[i]; j++) {
             if (j%2==0){
-                devices = input_data[i][j];
+                *devices = input_data[i][j];
+                processes[i-1]->nDisp++;
                 devices++;
             }else{
-                tCpu = input_data[i][j];
+                *tCpu = input_data[i][j];
                 tCpu++;
             }
         }
     }
 
-    for (int i = 0; i < rows; i++) {
+    for (i = 0; i < rows; i++) {
+    if (input_data[i]) {
         free(input_data[i]);
     }
+}
 }
 
 void printSimulationState(int time, PCB *processes[], int nProc, FILE *output) {
@@ -145,15 +155,32 @@ void printSimulationState(int time, PCB *processes[], int nProc, FILE *output) {
 
     int i;
     for (i = 0; i < nProc; i++) {
-        char *state;
+        char state[50]; 
+
         switch (processes[i]->state) {
-            case 0: state = "new/ready "; break;
-            case 1: state = "ready     "; break;
-            case 2: state = "running   "; break;
-            case 3: state = "blocked   "; break;
-            case 4: state = "terminated"; break;
-            default: state = "--        ";
+            case 0: 
+                strcpy(state, "new/ready        ");
+                break;
+            case 1: 
+                strcpy(state, "ready            ");
+                break;
+            case 2: 
+                strcpy(state, "running          ");
+                break;
+            case 3: 
+                sprintf(state, "blocked d%d       ", processes[i]->device_wait);
+                break;
+            case 4: 
+                strcpy(state, "terminated       ");
+                break;
+            case 5: 
+                sprintf(state, "bloqued queue d%d ", processes[i]->device_wait);
+                break;
+            default: 
+                strcpy(state, "--               ");
         }
+
+        // Escreve o estado no arquivo de saída
         fprintf(output, " | P%02d state: %s", processes[i]->id, state);
     }
     fprintf(output, " |\n");
@@ -161,12 +188,11 @@ void printSimulationState(int time, PCB *processes[], int nProc, FILE *output) {
 
 void simulate(const char *input_file, const char *output_file) {
     PCB *processes[MAX_PROCESSES];
-    int i, nProc, nDisp, tDisp[MAX_DEVICES];
+    int i, j, nProc, nDisp, tDisp[MAX_DEVICES];
+    int *tCpu = NULL;
+    int *devices = NULL;
+
     parseInputFile(input_file, processes, &nProc, &nDisp, tDisp);
-    
-    for (i=0;i<nProc;i++){
-         printf("Process: %d\n id: %d tInicio: %d num_cycles: %d, current cycle: %d state: %d remaining_time: %d waiting time %d\n\n", i, processes[i]->id, processes[i]->tInicio, processes[i]->num_cycles, processes[i]->current_cycle, processes[i]->state, processes[i]->remaining_time, processes[i]->waiting_time);
-    }
     
     FILE *output = fopen(output_file, "w");
     if (!output) {
@@ -179,6 +205,10 @@ void simulate(const char *input_file, const char *output_file) {
 
     for (i = 0; i < nDisp; i++) {
         deviceQueues[i] = createQueue();
+        if (!deviceQueues[i]) {
+            perror("Erro ao criar fila de dispositivos");
+            exit(EXIT_FAILURE);
+        }
     }
 
     int time = 0;
@@ -186,35 +216,112 @@ void simulate(const char *input_file, const char *output_file) {
     PCB *currentProcess = NULL;
     char all_terminated = 0;
     int cpu_in_use = 0;
+    int device_in_use[MAX_DEVICES];
+    int count_terminated;
+
+    for (i=0;i<MAX_DEVICES;i++){
+        device_in_use[i] = 0;
+    }
 
     while (all_terminated==0) {
-        for(i=0;i<nProc;i++){
-            if ((processes[i]->state == 1 || processes[i]->state == 0) && cpu_in_use == 0){
-                processes[i]->state = 2;
-                cpu_in_use = 1;
-            }
-            if (processes[i]->tInicio==time) processes[i]->state = 0;
-            
-            if (processes[i]->state == 2){
-                processes[i]->num_cycles++;
-                processes[i]->current_cycle++;
-            }
+        if (isEmpty(readyQueue) && cpu_in_use == 0) cpu_idle_time++;
+        else if (cpu_in_use==0){
+            currentProcess = dequeue(readyQueue);
+            currentProcess->state=2;
+            cpu_in_use = 1;
+        }
 
-            if(processes[i]->current_cycle>TIME_QUANTUM){
-                processes[i]->state = 1;
-                cpu_in_use = 0;
-                processes[i]->current_cycle = 0;
+        for (i=0;i<nDisp;i++){
+            if (!isEmpty(deviceQueues[i]) && device_in_use[i]==0){
+                currentProcess = dequeue(deviceQueues[i]);
+                currentProcess->state=3;
+                currentProcess->remaining_time = tDisp[i];
+                device_in_use[i] = 1;
             }
         }
+
+        for(i=0,count_terminated=0;i<nProc;i++){
+            tCpu = processes[i]->tCpu;
+            devices = processes[i]->devices;
+            if (processes[i]->tInicio==time){
+                enqueue(readyQueue, processes[i]);
+                processes[i]->state = 0;
+            }
+
+            if(*tCpu==0 && processes[i]->nDisp>0 && processes[i]->remaining_time>0 && processes[i]->state == 2){
+                if (*devices - 1 >= 0 && *devices - 1 < MAX_DEVICES) {
+                    enqueue(deviceQueues[*devices - 1], processes[i]);
+                } else {
+                    fprintf(stderr, "Erro: Dispositivo inválido acessado por processo %d\n", processes[i]->id);
+                    exit(EXIT_FAILURE);
+                }
+                cpu_in_use = 0;
+                if(device_in_use[*devices-1]==1) {
+                    processes[i]->state = 5;
+                    processes[i]->device_wait = *devices;
+                }               
+                processes[i]->devices++;
+                processes[i]->nDisp--;
+            }else if(*tCpu==0 && processes[i]->nDisp==0 && processes[i]->state == 2){
+                processes[i]->state = 4;
+                cpu_in_use = 0;
+            }else if(*tCpu==0 && processes[i]->nDisp>0 && processes[i]->remaining_time==0 && processes[i]->state == 2){
+                processes[i]->state = 1;
+                enqueue(readyQueue, processes[i]);
+                processes[i]->remaining_time = TIME_QUANTUM;
+                cpu_in_use = 0;
+            }else if(*tCpu>0 && processes[i]->remaining_time>0 && processes[i]->state == 2){
+                processes[i]->num_cycles++;
+                *tCpu = *tCpu - 1;
+                processes[i]->remaining_time--;
+            }else if(*tCpu>0 && processes[i]->remaining_time==0 && processes[i]->state == 2){
+                enqueue(readyQueue, processes[i]);
+                processes[i]->remaining_time = TIME_QUANTUM;
+                processes[i]->state = 1;
+                cpu_in_use = 0;
+            }else if(processes[i]->state == 3 && processes[i]->remaining_time>0){
+                processes[i]->remaining_time--;
+                processes[i]->waiting_time++;
+                processes[i]->device_time[*devices-1]++;
+            }else if (processes[i]->state == 3 && processes[i]->remaining_time==0) {
+                processes[i]->state = 1;
+                if (*(devices-1) - 1 >= 0 && *(devices-1) - 1 < MAX_DEVICES) {
+                    printf("certo ");
+                } else {
+                    fprintf(stderr, "Erro: Dispositivo inválido acessado por processo %d\n", processes[i]->id);
+                    exit(EXIT_FAILURE);
+                }
+                device_in_use[*(devices-1)-1] = 0;
+                enqueue(readyQueue, processes[i]);
+                processes[i]->tCpu++;
+                processes[i]->remaining_time = TIME_QUANTUM;
+            }
+
+            if(processes[i]->state==0 || processes[i]->state==1 || processes[i]->state==2 || processes[i]->state==3) processes[i]->throughput_time++;
+
+            if(processes[i]->state==4) count_terminated++; //verificar processos terminados 
+        }
+
         printSimulationState(time, processes, nProc, output);
         time++;
 
-        if(time>50) break;
+        if(count_terminated==nProc) all_terminated=1;
+        if(time>200) break;
+    }
+    for(i=0;i<nProc;i++){
+        fprintf(output, "| P0%d ", i+1);
+        for(j=0; j<nDisp; j++){
+            fprintf(output, "device time d%d: %d, ", j+1, processes[i]->device_time[j]);
+        }
+        fprintf(output, "waiting time: %d, troughput: %d\n", processes[i]->waiting_time, processes[i]->throughput_time);
     }
 
     fprintf(output, "| CPU idle time: %d |\n", cpu_idle_time);
     fclose(output);
-    
+
+    for (i=0;i<MAX_DEVICES;i++){
+        printf("device_in_use[%d] = %d\n", i, device_in_use[i]);
+    }
 }
 
 int main() {
